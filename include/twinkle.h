@@ -15,7 +15,7 @@ void DrawTwinkleOld()
   for (int i = 0; i < NUM_LEDS / 4; i++)
   {
     g_LEDs[random(NUM_LEDS)] = TwinkleColors[random(NUM_COLORS)];
-    FastLED.show(LED_BRIGHTNESS);
+    FastLED.show(g_Brightness);
     delay(200);
   }
 }

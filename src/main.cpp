@@ -15,59 +15,14 @@ CRGB g_LEDs[NUM_LEDS] = {0};
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_OLED(U8G2_R0, OLED_RESET, OLED_CLOCK, OLED_DATA);
 int g_lineHeight = 0;
-int g_Brightness = 64;
-int g_PowerLimit = 900;
+int g_Brightness = 255;
+int g_PowerLimit = 2000;
 
-// #include <marquee.h>
-// #include <twinkle.h>
-// #include <comet.h>
-// #include <bounce.h>
-
-#define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
-#define TIMES_PER_SECOND(x) EVERY_N_MILLISECONDS(1000 / x)
-
-// FractionalColor
-//
-// Returns a fraction of a color; abstracts the fadeToBlack out to this function in case we want to
-// improve the color math or do color correction all in one location at a later date
-
-CRGB ColorFraction(CRGB colorIn, float fraction)
-{
-  fraction = min(1.0f, fraction);
-  return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
-}
-
-void DrawPixels(float fPos, float count, CRGB color)
-{
-  // calculate how much the first pixel will hold
-  float availFirstPixel = 1.0f - (fPos - (long)(fPos));
-  float amtFirstPixel = min(availFirstPixel, count);
-  float remaining = min(count, FastLED.size() - fPos);
-  int iPos = fPos;
-
-  // Blend (add) in the color of the first partial pixel
-
-  if (remaining > 0.0f)
-  {
-    FastLED.leds()[iPos++] += ColorFraction(color, amtFirstPixel);
-    remaining -= amtFirstPixel;
-  }
-
-  // Now draw any full pixels in the middle
-
-  while (remaining > 1.0f)
-  {
-    FastLED.leds()[iPos++] += color;
-    remaining--;
-  }
-
-  // Draw tail pixel, up to a single full pixel
-
-  if (remaining > 0.0f)
-  {
-    FastLED.leds()[iPos] += ColorFraction(color, remaining);
-  }
-}
+#include "ledgfx.h"
+#include "comet.h"
+#include "marquee.h"
+#include "twinkle.h"
+#include "fire.h"
 
 void DrawMarqueeComparison()
 {
@@ -116,72 +71,14 @@ void setup()
   FastLED.setMaxPowerInMilliWatts(g_PowerLimit);
 }
 
-// void DrawLinesAndGraphicsFrames(int fps)
-// {
-
-//   g_OLED.clearBuffer();
-//   g_OLED.home();
-
-//   g_OLED.drawFrame(0, 0, g_OLED.getWidth(), g_OLED.getHeight());
-
-//   g_OLED.setCursor(3, g_lineHeight * 2 + 2);
-//   g_OLED.print("Hello");
-//   g_OLED.setCursor(3, g_lineHeight * 3 + 2);
-//   g_OLED.print("World");
-//   g_OLED.setCursor(3, g_lineHeight * 4 + 2);
-//   g_OLED.printf("%03d", fps);
-
-//   for (int x = 0; x < g_OLED.getWidth(); x += 4)
-//   {
-//     g_OLED.drawLine(x, 0, g_OLED.getWidth() - x, g_OLED.getHeight());
-//   }
-
-//   const int reticleY = g_OLED.getHeight() / 2;
-//   const int reticleR = g_OLED.getHeight() / 4 - 2;
-//   const int reticleX = g_OLED.getWidth() - reticleR - 8;
-
-//   for (int r = reticleR; r > 0; r -= 3)
-//   {
-//     g_OLED.drawCircle(reticleX, reticleY, r);
-//   }
-//   g_OLED.drawHLine(reticleX - reticleR - 5, reticleY, 2 * reticleR + 10);
-//   g_OLED.drawVLine(reticleX, reticleY - reticleR - 5, 2 * reticleR + 10);
-
-//   g_OLED.sendBuffer();
-// }
-
 void loop()
 {
-  // static bool bLED = LOW;
-  // double fps = 0;
-  // uint8_t initialHue = 0;
-  // const uint8_t deltaHue = 16;
-  // const uint8_t hueDensity = 4;
-  // BouncingBallEffect balls(NUM_LEDS, 3, 48, true);
 
+  CFireEffect fire(NUM_LEDS, 20, 100, 3, 4, false, false);
   while (true)
   {
     FastLED.clear();
-    // bLED = !bLED; // blink the led on and off
-    // digitalWrite(LED_BUILTIN, bLED);
-
-    // double dStart = millis() / 1000.0; // display a frame and calculate how long it takes
-
-    // static unsigned long msLastUpdate = millis();
-    EVERY_N_MILLISECONDS(20)
-    {
-      /*
-
-      fadeToBlackBy(g_LEDs, NUM_LEDS, 64);
-      int cometSize = 15;
-      int iPos = beatsin16(32, 0, NUM_LEDS - cometSize);
-      byte hue = beatsin8(60);
-      for (int i = iPos; i < iPos + cometSize; i++)
-        g_LEDs[iPos] = CHSV(hue, 255, 255);
-            */
-      DrawMarqueeComparison();
-    }
-
+    fire.DrawFire();
     EVERY_N_MILLISECONDS(250)
     {
       g_OLED.clearBuffer();
@@ -193,16 +90,7 @@ void loop()
       g_OLED.printf("Brite: %d", calculate_max_brightness_for_power_mW(g_Brightness, g_PowerLimit));
       g_OLED.sendBuffer();
     }
-
-    // fill_rainbow(g_LEDs, NUM_LEDS, initialHue += hueDensity, deltaHue);
-    // DrawMarquee();
-    // DrawTwinkle();
-    // DrawComet();
-    // balls.Draw();
     FastLED.setBrightness(g_Brightness);
     FastLED.delay(33);
-
-    // double dEnd = millis() / 1000.0;
-    // fps = FramesPerSecond(dEnd - dStart);
   }
 }
